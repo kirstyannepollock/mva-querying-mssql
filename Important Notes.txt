@@ -1,0 +1,132 @@
+====================================================
+Functions
+====================================================
+
+CHOOSE (1, "A", "B", "C") => "A"
+
+====================================================
+Aggregate Functions
+====================================================
+
+-- need to get a grasp of this shit...
+RANK() OVER (ORDER BY...) often with TOP() 
+
+select 
+	ROW_NUMBER() OVER (ORDER BY SalesOrderDetailID) as R1,
+
+	-- within each order, row number ordered by detail id
+	ROW_NUMBER() OVER (PARTITION BY SalesOrderID ORDER BY SalesOrderDetailID) as R2,
+	
+	Sum(unitprice) OVER (PARTITION BY SalesOrderID) as totalorderprice,	
+	RANK() OVER (PARTITION BY SalesOrderID ORDER BY unitprice) as salesrank
+
+	--Can't do this ...
+	--rank() Over ( ORDER BY Sum(unitprice) OVER (PARTITION BY SalesOrderID) ) as ss
+
+from sales.salesorderdetail as t
+order by SalesOrderDetailID
+
+====================================================
+Set Functions
+====================================================
+INTERSECT - what it says on the tin...
+EXCEPT - all from right hand EXCEPT what's in left hand
+
+----------------------------------------------------
+CROSS / OUTER APPLY ... 
+----------------------------------------------------
+I would have done these as joins to subqueries or CTEs in the past. 
+e.g. "all customers and their last 5 orders"
+
+select
+
+	c.customerid,
+	c.accountnumber,
+	o.*
+from
+	sales.customer as c
+OUTER APPLY
+(
+	SELECT TOP (5) soh.orderdate, soh.salesorderid
+	FROM sales.SalesOrderHeader as soh
+	WHERE soh.CustomerID = c.CustomerID
+	ORDER BY soh.orderdate desc
+) as o
+WHERE c.territoryId = 1
+order by c.customerid
+
+====================================================
+Windowing Functions
+====================================================
+(aggregates as single fields in non-grouped queries)
+
+OVER(PARTITION BY)
+
+RANK (ties, gaps), DENSE_RANK (ties), ROW_NUMBER (unique), NTILE (group)
+
+----------------------------------------------------
+Offset functions 
+----------------------------------------------------
+LAG (prev), LEAD (subsq), FIRST_VALUE (needs ordering), LAST_VALUE(needs ordering)
+
+====================================================
+UNPIVOT
+====================================================
+useful for normalising data!!!
+
+====================================================
+GROUP BY stuff
+====================================================
+Use as a GROUP BY clause ...
+
+----------------------------------------------------
+GROUPING SETS
+----------------------------------------------------
+Kinda a shortcut for unions for different groupings.
+NULL - use GROUPING_ID(col) 1 = generated, 0 real
+
+----------------------------------------------------
+CUBE
+----------------------------------------------------
+
+----------------------------------------------------
+ROLLUP
+----------------------------------------------------
+Hierarchical
+
+====================================================
+DML
+====================================================
+INSERT INTO ... EXEC <function/sp/dyn SQL>
+
+----------------------------------------------------
+MERGE
+----------------------------------------------------
+Use with XML data (select using xpath as CTE) to update.
+variable as XML type
+handy for bulk insert/ update type stuff ...
+
+WHEN MATCHED (UPDATE SET) / UNMATCHED (INSERT)
+
+----------------------------------------------------
+OUTPUT clause
+----------------------------------------------------
+Rememeber this on delete/insert/update/merge.
+Also for outputting sequence/identity values!
+LOOK IT UP!!
+
+----------------------------------------------------
+Sequences
+----------------------------------------------------
+CREATE SEQUENCE <name> AS <type> START WITH <start> INCREMENT BY <increment>
+SELECT NEXT VALUE FOR <name> 
+use no cache to prevent repeats (but usually IX or key)
+auto locking (so no concurency issues)
+
+====================================================
+TSQL
+====================================================
+
+remember SET XACT_ABORT ON (when appropriate).
+
+Batches
